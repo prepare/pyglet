@@ -9,8 +9,10 @@ __version__ = '$Id: $'
 import sys
 
 import lib_pulseaudio as pa
-from pyglet.media import AbstractAudioDriver, AbstractAudioPlayer, \
-    AbstractListener, MediaException, MediaEvent
+from pyglet.media.drivers.base import AbstractAudioDriver, AbstractAudioPlayer
+from pyglet.media.events import MediaEvent
+from pyglet.media.exceptions import MediaException
+from pyglet.media.listener import AbstractListener
 
 import pyglet
 _debug = pyglet.options['debug_media']
@@ -430,6 +432,7 @@ class PulseAudioPlayer(AbstractAudioPlayer):
     def play(self):
         if _debug:
             print 'play'
+
         context.lock()
         context.async_operation(
              pa.pa_stream_cork(self.stream, 0, 
@@ -452,7 +455,7 @@ class PulseAudioPlayer(AbstractAudioPlayer):
             print 'stop'
         context.lock()
         context.async_operation(
-             pa.pa_stream_cork(self.stream, 1, 
+                 pa.pa_stream_cork(self.stream, 1, 
                                pa.pa_stream_success_cb_t(0), None)
         )
         context.unlock()
