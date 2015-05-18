@@ -1,6 +1,8 @@
 """
 Tests for the silent audio driver.
 """
+from __future__ import division
+from builtins import object
 
 from tests import mock
 import unittest
@@ -250,7 +252,7 @@ class MockSourceGroup(object):
         self.bytes_buffered = 0
 
     def _get_audio_data(self, length):
-        secs = float(length) / self.audio_format.bytes_per_second
+        secs = length / self.audio_format.bytes_per_second
         if secs > self.duration:
             secs = self.duration
             length = int(secs * self.audio_format.bytes_per_second)

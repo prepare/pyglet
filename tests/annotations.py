@@ -6,6 +6,7 @@ Use these to control running test cases only on specific platforms.
 
 Later some test filtering could be added.
 """
+from builtins import object
 
 import pyglet
 import unittest
