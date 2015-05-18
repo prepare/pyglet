@@ -1,8 +1,10 @@
+from __future__ import division
+from builtins import range
 import ctypes
 from tests import mock
 import os
 import random
-import unittest
+from tests.future_test import FutureTestCase
 
 import pyglet
 from pyglet.media.player import Player, PlayerGroup
@@ -11,7 +13,7 @@ from pyglet.media.sources.base import *
 #pyglet.options['debug_media'] = True
 
 
-class PlayerTestCase(unittest.TestCase):
+class PlayerTestCase(FutureTestCase):
     # Default values to use
     audio_format_1 = AudioFormat(1, 8, 11025)
     audio_format_2 = AudioFormat(2, 8, 11025)
@@ -167,6 +169,9 @@ class PlayerTestCase(unittest.TestCase):
 
     def pretend_driver_player_at_time(self, t):
         self.mock_audio_driver_player.get_time.return_value = t
+
+    def pretend_silent_driver_player_at_time(self, t):
+        self.mock_silent_audio_driver_player.get_time.return_value = t
 
     def test_queue_single_audio_source_and_play(self):
         """Queue a single audio source and start playing it."""
@@ -425,6 +430,7 @@ class PlayerTestCase(unittest.TestCase):
         self.assert_driver_player_started()
 
         self.reset_mocks()
+        self.pretend_driver_player_at_time(1.)
         self.player.delete()
         self.assert_driver_player_stopped()
         self.assert_driver_player_destroyed()
@@ -627,7 +633,7 @@ class PlayerTestCase(unittest.TestCase):
         self.assert_driver_player_started()
         self.assert_now_playing(mock_source)
         self.assert_new_texture_created(self.video_format_1)
-        self.assert_update_texture_scheduled(1. / 30)
+        self.assert_update_texture_scheduled(1 / 30)
 
         self.reset_mocks()
         self.pretend_driver_player_at_time(0.2)
@@ -652,7 +658,7 @@ class PlayerTestCase(unittest.TestCase):
         self.reset_mocks()
         self.player.play()
         self.assert_now_playing(mock_source)
-        self.assert_update_texture_scheduled(1. / 30)
+        self.assert_update_texture_scheduled(1 / 30)
         self.assert_no_new_texture_created()
         self.assert_texture_not_updated()
 
@@ -683,7 +689,7 @@ class PlayerTestCase(unittest.TestCase):
         self.player.queue(mock_source)
         self.player.play()
         self.assert_new_texture_created(self.video_format_1)
-        self.assert_update_texture_scheduled(1. / 30)
+        self.assert_update_texture_scheduled(1 / 30)
 
         self.reset_mocks()
         self.pretend_driver_player_at_time(0.0)
@@ -715,13 +721,13 @@ class PlayerTestCase(unittest.TestCase):
 
         self.player.play()
         self.assert_new_texture_created(self.video_format_1)
-        self.assert_update_texture_scheduled(1. / 30)
+        self.assert_update_texture_scheduled(1 / 30)
 
         self.reset_mocks()
         self.player.next_source()
         self.assert_new_texture_created(self.video_format_2)
         self.assert_update_texture_unscheduled()
-        self.assert_update_texture_scheduled(1. / 25)
+        self.assert_update_texture_scheduled(1 / 25)
 
     def test_video_seek_next_frame(self):
         """It is possible to jump directly to the next frame of video and adjust the audio player
@@ -731,7 +737,7 @@ class PlayerTestCase(unittest.TestCase):
         self.player.queue(mock_source)
         self.player.play()
         self.assert_new_texture_created(self.video_format_1)
-        self.assert_update_texture_scheduled(1./30)
+        self.assert_update_texture_scheduled(1 / 30)
 
         self.reset_mocks()
         self.pretend_driver_player_at_time(0.0)
@@ -751,7 +757,7 @@ class PlayerTestCase(unittest.TestCase):
         self.player.queue(mock_source)
         self.player.play()
         self.assert_new_texture_created(self.video_format_1)
-        self.assert_update_texture_scheduled(1./30)
+        self.assert_update_texture_scheduled(1 / 30)
 
         self.reset_mocks()
         self.pretend_driver_player_at_time(0.0)
@@ -779,16 +785,17 @@ class PlayerTestCase(unittest.TestCase):
         self.player.queue(mock_source)
         self.player.play()
         self.assert_new_texture_created(self.video_format_1)
-        self.assert_update_texture_scheduled(1./30)
+        self.assert_update_texture_scheduled(1 / 30)
         self.assert_no_new_driver_player_created()
         self.assert_silent_driver_player_created_for(mock_source)
 
         self.reset_mocks()
+        self.pretend_silent_driver_player_at_time(1.)
         self.player.delete()
         self.assert_silent_driver_player_destroyed()
 
 
-class PlayerGroupTestCase(unittest.TestCase):
+class PlayerGroupTestCase(FutureTestCase):
     def create_mock_player(self, has_audio=True):
         player = mock.MagicMock()
         if has_audio:
@@ -816,7 +823,7 @@ class PlayerGroupTestCase(unittest.TestCase):
 
         self.assertIsNotNone(call_args, msg='No player was used to start all audio players.')
         started_players = call_args[0][0]
-        self.assertItemsEqual(started_players, audio_players, msg='Not all players with audio players were started')
+        self.assertCountEqual(started_players, audio_players, msg='Not all players with audio players were started')
 
     def assert_players_stopped(self, *players):
         for player in players:
@@ -836,7 +843,7 @@ class PlayerGroupTestCase(unittest.TestCase):
 
         self.assertIsNotNone(call_args, msg='No player was used to stop all audio players.')
         stopped_players = call_args[0][0]
-        self.assertItemsEqual(stopped_players, audio_players, msg='Not all players with audio players were stopped')
+        self.assertCountEqual(stopped_players, audio_players, msg='Not all players with audio players were stopped')
 
     def reset_mocks(self, *mocks):
         for m in mocks:
